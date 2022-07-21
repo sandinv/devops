@@ -1,0 +1,39 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+
+VAGRANT_BOX         = "generic/ubuntu2204"
+VAGRANT_BOX_VERSION = "4.0.2"
+CPUS                = 1
+MEMORY              = 4048
+INSTANCES           = 1
+
+Vagrant.configure(2) do |config|
+
+  (1..INSTANCES).each do |i|
+
+    config.vm.provision "shell", path: "bootstrap.sh"
+
+    config.vm.define "ubuntu0#{i}" do |node|
+
+      node.vm.box               = VAGRANT_BOX
+      node.vm.box_check_update  = false
+      node.vm.box_version       = VAGRANT_BOX_VERSION
+      node.vm.hostname          = "ubuntu"
+
+      node.vm.network "private_network", ip: "10.0.0.1#{i}"
+
+      node.vm.provider :virtualbox do |v|
+        v.name    = "ubuntu0#{i}"
+        v.memory  = MEMORY
+        v.cpus    = CPUS
+      end
+
+      node.vm.provider :libvirt do |v|
+        v.memory  = MEMORY
+        v.nested  = true
+        v.cpus    = CPUS
+      end
+    end
+  end
+end
