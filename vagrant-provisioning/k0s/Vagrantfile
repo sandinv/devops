@@ -1,0 +1,28 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+
+  config.vm.box = "ubuntu/focal64"
+  config.ssh.insert_key = false
+
+  config.vm.define "controller" do |controller|
+    controller.vm.hostname = "k0scontroller"
+    controller.vm.network "private_network", ip: "10.0.0.10"
+    controller.vm.provider :virtualbox do |v|
+      v.name = "k0scontroller"
+      v.memory = 1024
+      v.cpus   = 1
+    end
+  end
+
+  config.vm.define "worker" do |worker|
+    worker.vm.hostname = "k0sworker"
+    worker.vm.network "private_network", ip: "10.0.0.20"
+    worker.vm.provider :virtualbox do |v|
+      v.name = "k0sworker"
+      v.memory = 2048
+      v.cpus   = 1
+    end
+  end
+end

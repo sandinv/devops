@@ -1,0 +1,18 @@
+apiVersion: k0sctl.k0sproject.io/v1beta1
+kind: Cluster
+metadata:
+  name: k0s-cluster
+spec:
+  hosts:
+  - role: controller
+    ssh:
+      address: 10.0.0.10
+      user: vagrant
+      keyPath: ~/.vagrant.d/insecure_private_key
+    privateInterface: enp0s8
+  - role: worker
+    ssh:
+      address: 10.0.0.20
+      user: vagrant
+      keyPath: ~/.vagrant.d/insecure_private_key
+    privateInterface: enp0s8
