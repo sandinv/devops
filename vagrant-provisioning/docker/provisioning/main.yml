@@ -4,7 +4,12 @@
       - name: docker
     docker_users:
       - victor
+  pre_tasks:
+    - name: Ensure apt cache is update
+      apt:
+        update_cache: yes
   roles:
+    - sandinv.credentials
     - geerlingguy.pip
     - geerlingguy.docker
   tasks:
@@ -24,7 +29,7 @@
           with_items: "{{ ssh_scan.stdout_lines }}"
         - name: Remove previous docker context
           shell:
-            cmd: docker context rm remote-docker
+            cmd: docker context rm -f remote-docker
           ignore_errors: yes
         - name: Create docker context
           shell:
