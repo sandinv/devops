@@ -1,0 +1,36 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+VAGRANT_BOX         = "ubuntu/jammy64"
+CPUS                = 1
+MEMORY              = 4048
+
+Vagrant.configure(2) do |config|
+
+    config.ssh.insert_key = false
+    config.vm.provision :ansible do |ansible|
+      ansible.playbook = "provisioning/main.yml"
+      ansible.become = true
+    end
+
+    config.vm.define "podman" do |node|
+
+      node.vm.box               = VAGRANT_BOX
+      node.vm.box_check_update  = false
+      node.vm.hostname          = "podman"
+
+      node.vm.network "private_network", ip: "10.0.0.12"
+
+      node.vm.provider :virtualbox do |v|
+        v.name    = "podman"
+        v.memory  = MEMORY
+        v.cpus    = CPUS
+      end
+
+      node.vm.provider :libvirt do |v|
+        v.memory  = MEMORY
+        v.nested  = true
+        v.cpus    = CPUS
+      end
+    end
+end

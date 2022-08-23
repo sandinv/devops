@@ -1,0 +1,92 @@
+- name: Preparing podman machine
+  hosts: all
+  vars:
+    home_dir: /home/vagrant
+  roles:
+    - sandinv.development
+  tasks:
+    - name: Install podman
+      apt:
+        name: podman
+        state: present
+        update_cache: yes
+
+    - name: Install skopeo
+      apt:
+        name: skopeo
+        state: present
+
+    - name: Install dnsmasq
+      apt:
+        name: dnsmasq
+        state: present
+      register: dnsmasq
+
+    - name: Create resolved.conf.d folder
+      file:
+        path: /etc/systemd/resolved.conf.d/
+        state: directory
+
+    - name: Disable systemd-resolved stub
+      copy:
+        dest: /etc/systemd/resolved.conf.d/noresolved.conf
+        content: |
+          [Resolve]
+          DNSStubListener=no
+
+    - name: Restart dnsmasq and systemd-resolved
+      systemd:
+        name: "{{ item }}"
+        state: restarted
+      with_items:
+        - systemd-resolved
+        - dnsmasq
+      when: dnsmasq.changed
+
+    - name: Start dnsmasq
+      systemd:
+        name: dnsmasq
+        state: started
+        enabled: yes
+
+    - name: Install python3-pip
+      apt:
+        name: python3-pip
+        state: present
+
+    - name: Git clone dnsname
+      git:
+        repo: 'https://github.com/containers/dnsname'
+        dest: /home/vagrant/dnsname
+        single_branch: yes
+        version: main
+
+    - name: Install make and golang to compile dnsname
+      apt:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - golang
+        - make
+
+    - name: Compile dnsname
+      shell:
+        cmd: make
+        chdir: /home/vagrant/dnsname
+        creates: bin/dnsname
+
+    - name: Install dnsname
+      become: true
+      shell:
+        cmd: make install PREFIX=/usr
+        chdir: /home/vagrant/dnsname
+        creates: /usr/libexec/cni/dnsname
+
+    - name: Install yyaml python-dotenv and podman-compose
+      pip:
+        name: "{{ item }}"
+      with_items:
+        - pyyaml
+        - python-dotenv
+        - podman-compose
+
